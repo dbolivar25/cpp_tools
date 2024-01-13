@@ -35,7 +35,7 @@ enum Commands {
     /// Initializes and runs set up for the C++ project
     Init {
         /// Sets the source directory
-        #[clap(short, long, default_value = "src")]
+        #[clap(short, long, default_value = ".")]
         src_dir: String,
 
         /// Sets the build directory
@@ -71,7 +71,6 @@ enum Commands {
         // /// Specifies the include directory
         // #[clap(short, long, default_value = "include")]
         // include_dir: String,
-
         /// Specifies the build directory
         #[clap(short, long, default_value = "build")]
         build_dir: String,
@@ -108,16 +107,21 @@ fn main() {
 
             println!("\nCreating new project: {}\n", name);
 
-            let src_dir = format!("{}/{}", name, src_dir);
-            let include_dir = format!("{}/{}", name, include_dir);
-            let build_dir = format!("{}/{}", name, build_dir);
-            let exec_dir = format!("{}/{}", name, exec_dir);
+            println!("    Creating directories...");
 
-            std::fs::create_dir_all(&src_dir).unwrap();
-            std::fs::create_dir_all(&include_dir).unwrap();
-            std::fs::create_dir_all(&build_dir).unwrap();
-            std::fs::create_dir_all(&exec_dir).unwrap();
+            println!("        src_dir: {}", src_dir);
+            println!("        include_dir: {}", include_dir);
+            println!("        build_dir: {}", build_dir);
+            println!("        exec_dir: {}", exec_dir);
 
+            std::fs::create_dir_all(&format!("{}/{}", name, src_dir)).unwrap();
+            std::fs::create_dir_all(&format!("{}/{}", name, include_dir)).unwrap();
+            std::fs::create_dir_all(&format!("{}/{}", name, build_dir)).unwrap();
+            std::fs::create_dir_all(&format!("{}/{}", name, exec_dir)).unwrap();
+
+            println!("    Creating files...");
+
+            println!("        .gitignore...");
             std::fs::write(
                 format!("./{}/.gitignore", &name),
                 format!(
@@ -134,6 +138,7 @@ fn main() {
             )
             .unwrap();
 
+            println!("        CMakeLists.txt...");
             std::fs::write(
                 format!("./{}/CMakeLists.txt", &name),
                 format!(
@@ -161,8 +166,9 @@ add_executable({name} ${{SOURCE_FILES}})
             )
             .unwrap();
 
+            println!("        main.cpp...");
             std::fs::write(
-                format!("./{}/main.cpp", &src_dir),
+                format!("./{}/main.cpp", &format!("{}/{}", name, src_dir)),
                 format!(
                     "
 #include <iostream>
@@ -176,38 +182,60 @@ int main() {{
             )
             .unwrap();
 
-            Command::new("zsh")
+            println!("    Initializing cmake...");
+            let out = Command::new("zsh")
                 .arg("-c")
-                .arg(format!("cmake -S {} -B {}", src_dir, build_dir))
+                .arg(format!(
+                    "cmake -S {} -B {}",
+                    format!("./{}/", name),
+                    format!("./{}/{}/", name, build_dir)
+                ))
                 .output()
                 .expect("Error: Failed to open project directory");
 
-            Command::new("zsh")
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+
+            println!("    Initializing git...");
+            let out = Command::new("zsh")
                 .arg("-c")
-                .arg(format!("git init"))
+                .arg(format!("cd ./{}/ && git init", name))
                 .output()
                 .expect("Error: Failed to run git init");
 
-            Command::new("zsh")
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+
+            println!("    Adding files to git...");
+            let out = Command::new("zsh")
                 .arg("-c")
-                .arg(format!("git add ."))
+                .arg(format!("cd ./{}/ && git add .", name))
                 .output()
                 .expect("Error: Failed to run git add");
 
-            Command::new("zsh")
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+
+            println!("    Committing files to git...");
+            let out = Command::new("zsh")
                 .arg("-c")
-                .arg(format!("git commit -m \"Initial commit\""))
+                .arg(format!("cd {} && git commit -m \"Initial commit\"", name))
                 .output()
                 .expect("Error: Failed to run git commit");
+
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+
+            println!("Project created successfully!");
         }
         Commands::Init { src_dir, build_dir } => {
             println!("\nInitializing project...\n");
 
-            Command::new("zsh")
+            let out = Command::new("zsh")
                 .arg("-c")
-                .arg(format!("cmake -S {} -B {}", src_dir, build_dir))
+                .arg(format!("cmake -S ./{}/ -B ./{}/", src_dir, build_dir))
                 .output()
                 .expect("Error: Failed to run cmake");
+
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+
+            println!("Project initialized successfully!");
         }
         Commands::Build {
             // src_dir: _,
@@ -218,11 +246,13 @@ int main() {{
         } => {
             println!("\nBuilding project...\n");
 
-            Command::new("zsh")
+            let out = Command::new("zsh")
                 .arg("-c")
-                .arg(format!("cmake --build {}", build_dir))
+                .arg(format!("cmake --build ./{}/", build_dir))
                 .output()
                 .expect("Error: Failed to run cmake");
+
+            println!("{}", String::from_utf8_lossy(&out.stdout));
         }
         Commands::Run {
             // src_dir: _,
@@ -234,18 +264,20 @@ int main() {{
         } => {
             println!("\nBuilding project...\n");
 
-            Command::new("zsh")
+            let out = Command::new("zsh")
                 .arg("-c")
                 .arg(format!("cmake --build {}", build_dir))
                 .output()
                 .expect("Error: Failed to run cmake");
 
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+
             println!("\nRunning project...\n");
 
-            Command::new("zsh")
+            let out = Command::new("zsh")
                 .arg("-c")
                 .arg(format!(
-                    "cd {exec_dir} && ./{exec_name} {exec_args} && cd ..",
+                    "cd {exec_dir} && ./{exec_name} {exec_args}",
                     exec_dir = runtime_dir,
                     exec_name = match exec_name {
                         Some(name) => name,
@@ -265,6 +297,8 @@ int main() {{
                 ))
                 .output()
                 .expect("Error: Failed to run executable");
+
+            println!("{}", String::from_utf8_lossy(&out.stdout));
         }
     }
 }

@@ -379,8 +379,10 @@ int main() {{
                     },
                     exec_args = args.map(|args| args.join(" ")).unwrap_or("".to_string())
                 ))
-                .output()
-                .expect("Error: Failed to run executable");
+                .spawn()
+                .expect("Error: Failed to run executable")
+                .wait_with_output()
+                .expect("Error: Executable terminated with an error");
 
             println!("{}", String::from_utf8_lossy(&out.stdout));
             println!("{}", String::from_utf8_lossy(&out.stderr));

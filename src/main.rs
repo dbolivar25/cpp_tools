@@ -173,7 +173,7 @@ cmake_minimum_required(VERSION 3.24)
 project({name} {project_lang})
 
 # Set compiler flags
-set(CMAKE_{project_type}STANDARD 23)
+set(CMAKE_{project_type}STANDARD {version})
 set(CMAKE_{project_type}STANDARD_REQUIRED ON)
 set(CMAKE_{project_type}EXTENSIONS OFF)
 set(CMAKE_{project_type}FLAGS \"${{CMAKE_{project_type}FLAGS}} -Wall -Werror -Wextra -pedantic -pedantic-errors -g\")
@@ -196,6 +196,11 @@ add_executable({name} ${{SOURCE_FILES}})
                         FileExtensions::Cpp => "CXX_",
                         FileExtensions::C => "C_",
                     },
+                    version = match extension {
+                        FileExtensions::Cpp => "23",
+                        FileExtensions::C => "17",
+
+                    }
                 ),
             )
             .unwrap();

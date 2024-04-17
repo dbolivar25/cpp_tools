@@ -48,33 +48,12 @@ enum Commands {
     },
     /// Builds the C++ project
     Build {
-        // /// Sets the source directory
-        // #[clap(short, long, default_value = "src")]
-        // src_dir: String,
-
-        // /// Sets the include directory
-        // #[clap(short, long, default_value = "include")]
-        // include_dir: String,
         /// Sets the build directory
         #[clap(short, long, default_value = "build")]
         build_dir: String,
-        // /// Sets the executable directory
-        // #[clap(short, long, default_value = "bin")]
-        // runtime_dir: String,
-
-        // /// Sets the executable name
-        // #[clap(short, long, default_value = None)]
-        // exec_name: Option<String>,
     },
     /// Runs the built C++ project
     Run {
-        // /// Specifies the source directory
-        // #[clap(short, long, default_value = "src")]
-        // src_dir: String,
-
-        // /// Specifies the include directory
-        // #[clap(short, long, default_value = "include")]
-        // include_dir: String,
         /// Specifies the build directory
         #[clap(short, long, default_value = "build")]
         build_dir: String,

@@ -67,8 +67,8 @@ enum Commands {
         exec_name: Option<String>,
 
         /// Specifies the executable arguments
-        #[clap(short, long, default_value = None)]
-        args: Option<Vec<String>>,
+        #[clap(last = true)]
+        args: Vec<String>,
     },
 }
 
@@ -136,7 +136,7 @@ fn handle_new_project(
 
     create_directories(&name, &src_dir, &include_dir, &build_dir, &exec_dir);
     create_project_files(&name, &src_dir, &include_dir, &exec_dir, &file_ext);
-    initialize_version_control(&name, &build_dir);
+    initialize_version_control(&name);
     handle_init_project(name, build_dir);
 }
 
@@ -238,7 +238,7 @@ int main() {{
     .unwrap();
 }
 
-fn initialize_version_control(name: &str, _build_dir: &str) {
+fn initialize_version_control(name: &str) {
     let command = format!(
         "cd {} && git init && git add . && git commit -m \"Initial commit\"",
         name
@@ -263,7 +263,7 @@ fn handle_run_project(
     build_dir: String,
     runtime_dir: String,
     exec_name: Option<String>,
-    args: Option<Vec<String>>,
+    args: Vec<String>,
 ) {
     let exec_name = exec_name.unwrap_or_else(|| {
         let output = Command::new("pwd")
@@ -273,7 +273,7 @@ fn handle_run_project(
         let name = pwd.split('/').last().unwrap();
         name.to_string()
     });
-    let args = args.unwrap_or_default().join(" ");
+    let args = args.join(" ");
     let command = format!("cd {} && ./{} {}", runtime_dir, exec_name, args);
 
     handle_build_project(build_dir.clone());

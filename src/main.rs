@@ -192,8 +192,7 @@ fn create_project_files(
     fs::write(
         format!("{}/CMakeLists.txt", name),
         format!(
-            "
-cmake_minimum_required(VERSION 3.24)
+            "cmake_minimum_required(VERSION 3.24)
 project({name} {project_lang})
 
 # Set compiler flags
@@ -218,8 +217,8 @@ add_executable({name} ${{SOURCE_FILES}})
     fs::write(
         format!("{}/{}/main.{}", name, src_dir, file_ext),
         format!(
-            "
-{}
+            "{}
+
 int main() {{
     {}
     return 0;

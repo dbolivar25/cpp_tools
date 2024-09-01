@@ -1,3 +1,5 @@
+# Cpp Tools
+
 ## Overview
 
 This CLI tool is designed to facilitate the creation, initialization, building,
@@ -18,7 +20,7 @@ aspects of a C++ project.
 
 ## Installation
 
-```
+```bash
 git clone https://github.com/dbolivar25/cpp_tools.git
 cd cpp_tools
 
@@ -29,6 +31,6 @@ cargo build --release
 
 ## Usage
 
-```
+```base
 cpp_tools
 ```

@@ -206,17 +206,11 @@ fn create_project_files(
         format!("{}/.gitignore", name),
         format!(
             "
-# Build files
-{}
-{}
+.*
 
-# C / C++
-*.o
-*.out
-*.exe
-*.dll
-*.so
-*.dylib
+# Build and executable directories
+{}
+{}
 ",
             build_dir, exec_dir
         ),

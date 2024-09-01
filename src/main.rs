@@ -145,8 +145,8 @@ fn handle_new_project(
 
     create_directories(&name, &src_dir, &include_dir, &build_dir, &exec_dir)?;
     create_project_files(&name, &src_dir, &include_dir, &exec_dir, &file_ext)?;
-    initialize_version_control(&name)?;
     handle_init_project(&name, &build_dir)?;
+    initialize_version_control(&name)?;
 
     println!("{}", format!("Created new project '{}'", name).green());
 

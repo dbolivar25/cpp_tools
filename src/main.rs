@@ -144,7 +144,14 @@ fn handle_new_project(
     };
 
     create_directories(&name, &src_dir, &include_dir, &build_dir, &exec_dir)?;
-    create_project_files(&name, &src_dir, &include_dir, &exec_dir, &file_ext)?;
+    create_project_files(
+        &name,
+        &src_dir,
+        &include_dir,
+        &build_dir,
+        &exec_dir,
+        &file_ext,
+    )?;
     handle_init_project(&name, &build_dir)?;
     initialize_version_control(&name)?;
 
@@ -176,6 +183,7 @@ fn create_project_files(
     name: &str,
     src_dir: &str,
     include_dir: &str,
+    build_dir: &str,
     exec_dir: &str,
     file_ext: &FileExtension,
 ) -> Result<()> {
@@ -196,7 +204,12 @@ fn create_project_files(
 
     fs::write(
         format!("{}/.gitignore", name),
-        "
+        format!(
+            "
+# Build files
+{}
+{}
+
 # C / C++
 *.o
 *.out
@@ -205,6 +218,8 @@ fn create_project_files(
 *.so
 *.dylib
 ",
+            build_dir, exec_dir
+        ),
     )
     .context("Failed to create .gitignore file")?;
 
@@ -333,17 +348,9 @@ fn run_command(command: &str) -> Result<()> {
         .context("Failed to wait on command")?;
 
     if output.status.success() {
-        println!(
-            "{}:\n{}",
-            "Success".green(),
-            String::from_utf8_lossy(&output.stdout)
-        );
+        println!("{}", String::from_utf8_lossy(&output.stdout));
     } else {
-        println!(
-            "{}:\n{}",
-            "Error".red(),
-            String::from_utf8_lossy(&output.stderr)
-        );
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
     }
 
     Ok(())

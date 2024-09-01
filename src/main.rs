@@ -1,9 +1,10 @@
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::{fmt::Display, fs, process::Command};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
-struct Cli {
+struct Args {
     #[clap(subcommand)]
     command: Commands,
 }
@@ -86,10 +87,10 @@ impl Display for FileExtension {
     }
 }
 
-fn main() {
-    let args = Cli::parse();
+fn main() -> Result<()> {
+    let Args { command } = Args::parse();
 
-    match args.command {
+    match command {
         Commands::New {
             name,
             file_ext,
@@ -119,25 +120,25 @@ fn handle_new_project(
     include_dir: String,
     build_dir: String,
     exec_dir: String,
-) {
+) -> Result<()> {
     if fs::metadata(&name).is_ok() {
-        println!("Error: Project already exists");
-        return;
+        anyhow::bail!("Project '{}' already exists", name);
     }
 
     let file_ext = match file_ext.to_ascii_lowercase().as_str() {
         "cpp" => FileExtension::Cpp,
         "c" => FileExtension::C,
         _ => {
-            println!("Error: Invalid file extension");
-            return;
+            anyhow::bail!("Valid file extensions are 'cpp' and 'c'");
         }
     };
 
-    create_directories(&name, &src_dir, &include_dir, &build_dir, &exec_dir);
-    create_project_files(&name, &src_dir, &include_dir, &exec_dir, &file_ext);
-    initialize_version_control(&name);
-    handle_init_project(name, build_dir);
+    create_directories(&name, &src_dir, &include_dir, &build_dir, &exec_dir)?;
+    create_project_files(&name, &src_dir, &include_dir, &exec_dir, &file_ext)?;
+    initialize_version_control(&name)?;
+    handle_init_project(name, build_dir)?;
+
+    Ok(())
 }
 
 fn create_directories(
@@ -146,11 +147,17 @@ fn create_directories(
     include_dir: &str,
     build_dir: &str,
     exec_dir: &str,
-) {
-    fs::create_dir_all(format!("{}/{}", name, src_dir)).unwrap();
-    fs::create_dir_all(format!("{}/{}", name, include_dir)).unwrap();
-    fs::create_dir_all(format!("{}/{}", name, build_dir)).unwrap();
-    fs::create_dir_all(format!("{}/{}", name, exec_dir)).unwrap();
+) -> Result<()> {
+    fs::create_dir_all(format!("{}/{}", name, src_dir))
+        .context("Failed to create source directory")?;
+    fs::create_dir_all(format!("{}/{}", name, include_dir))
+        .context("Failed to create include directory")?;
+    fs::create_dir_all(format!("{}/{}", name, build_dir))
+        .context("Failed to create build directory")?;
+    fs::create_dir_all(format!("{}/{}", name, exec_dir))
+        .context("Failed to create executable directory")?;
+
+    Ok(())
 }
 
 fn create_project_files(
@@ -159,7 +166,7 @@ fn create_project_files(
     include_dir: &str,
     exec_dir: &str,
     file_ext: &FileExtension,
-) {
+) -> Result<()> {
     let project_lang = match file_ext {
         FileExtension::Cpp => "CXX",
         FileExtension::C => "C",
@@ -187,7 +194,7 @@ fn create_project_files(
 *.dylib
 ",
     )
-    .unwrap();
+    .context("Failed to create .gitignore file")?;
 
     fs::write(
         format!("{}/CMakeLists.txt", name),
@@ -212,7 +219,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 add_executable({name} ${{SOURCE_FILES}})
 ",
         ),
-    ).unwrap();
+    ).context("Failed to create CMakeLists.txt file")?;
 
     fs::write(
         format!("{}/{}/main.{}", name, src_dir, file_ext),
@@ -234,28 +241,36 @@ int main() {{
             },
         ),
     )
-    .unwrap();
+    .context("Failed to create main source file")?;
+
+    Ok(())
 }
 
-fn initialize_version_control(name: &str) {
+fn initialize_version_control(name: &str) -> Result<()> {
     let command = format!(
         "cd {} && git init && git add . && git commit -m \"Initial commit\"",
         name
     );
 
-    run_command(&command);
+    run_command(&command).context("Failed to initialize version control")?;
+
+    Ok(())
 }
 
-fn handle_init_project(root_dir: String, build_dir: String) {
+fn handle_init_project(root_dir: String, build_dir: String) -> Result<()> {
     let command = format!("cmake -S ./{}/ -B ./{}/{}/", root_dir, root_dir, build_dir);
 
-    run_command(&command);
+    run_command(&command).context("Failed to initialize project")?;
+
+    Ok(())
 }
 
-fn handle_build_project(build_dir: String) {
+fn handle_build_project(build_dir: String) -> Result<()> {
     let command = format!("cmake --build ./{}/", build_dir);
 
-    run_command(&command);
+    run_command(&command).context("Failed to run build command")?;
+
+    Ok(())
 }
 
 fn handle_run_project(
@@ -263,7 +278,7 @@ fn handle_run_project(
     runtime_dir: String,
     exec_name: Option<String>,
     args: Vec<String>,
-) {
+) -> Result<()> {
     let exec_name = exec_name.unwrap_or_else(|| {
         let output = Command::new("pwd")
             .output()
@@ -275,23 +290,26 @@ fn handle_run_project(
     let args = args.join(" ");
     let command = format!("cd {} && ./{} {}", runtime_dir, exec_name, args);
 
-    handle_build_project(build_dir.clone());
-    run_command(&command);
+    handle_build_project(build_dir.clone()).context("Failed to build project")?;
+    run_command(&command).context("Failed to run executable")?;
+
+    Ok(())
 }
 
-fn run_command(command: &str) {
+fn run_command(command: &str) -> Result<()> {
     let output = Command::new("zsh")
         .arg("-c")
         .arg(command)
         .spawn()
-        .expect("Failed to execute command")
+        .context("Failed to spawn command")?
         .wait_with_output()
-        .expect("Command terminated with error");
+        .context("Failed to wait on command")?;
 
     if output.status.success() {
         println!("{}", String::from_utf8_lossy(&output.stdout));
     } else {
-        println!("Error: Command execution failed");
         println!("{}", String::from_utf8_lossy(&output.stderr));
     }
+
+    Ok(())
 }

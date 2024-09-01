@@ -2,16 +2,18 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::{fmt::Display, fs, process::Command};
 
+/// A simple C/C++ project manager
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
+#[clap(version, author = "Daniel Bolivar")]
 struct Args {
     #[clap(subcommand)]
     command: Commands,
 }
 
+/// Supported commands
 #[derive(Subcommand)]
 enum Commands {
-    /// Creates a new C++ project
+    /// Creates a new C/C++ project
     New {
         /// Sets the name of the project
         #[clap(short, long)]
@@ -37,7 +39,7 @@ enum Commands {
         #[clap(short, long, default_value = "bin")]
         exec_dir: String,
     },
-    /// Initializes and runs set up for the C++ project
+    /// Initializes and runs set up for the C/C++ project
     Init {
         /// Sets the root directory
         #[clap(short, long, default_value = ".")]
@@ -47,13 +49,13 @@ enum Commands {
         #[clap(short, long, default_value = "build")]
         build_dir: String,
     },
-    /// Builds the C++ project
+    /// Builds the C/C++ project
     Build {
         /// Sets the build directory
         #[clap(short, long, default_value = "build")]
         build_dir: String,
     },
-    /// Runs the built C++ project
+    /// Runs the built C/C++ project
     Run {
         /// Specifies the build directory
         #[clap(short, long, default_value = "build")]
@@ -70,6 +72,12 @@ enum Commands {
         /// Specifies the executable arguments
         #[clap(last = true)]
         args: Vec<String>,
+    },
+    /// Formats the C/C++ project
+    Format {
+        /// Specifies the source directory
+        #[clap(short, long, default_value = "src")]
+        src_dir: String,
     },
 }
 
@@ -110,6 +118,7 @@ fn main() -> Result<()> {
             exec_name,
             args,
         } => handle_run_project(build_dir, runtime_dir, exec_name, args),
+        Commands::Format { src_dir } => handle_format_project(src_dir),
     }
 }
 
@@ -292,6 +301,14 @@ fn handle_run_project(
 
     handle_build_project(build_dir.clone()).context("Failed to build project")?;
     run_command(&command).context("Failed to run executable")?;
+
+    Ok(())
+}
+
+fn handle_format_project(src_dir: String) -> Result<()> {
+    let command = format!("clang-format -i -style=file ./{}/{}", src_dir, "*");
+
+    run_command(&command).context("Failed to format project")?;
 
     Ok(())
 }

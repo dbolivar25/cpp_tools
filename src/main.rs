@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use colorize::AnsiColor;
 use std::{fmt::Display, fs, process::Command};
 
 /// A simple C/C++ project manager
@@ -110,7 +111,7 @@ fn main() -> Result<()> {
         Commands::Init {
             root_dir,
             build_dir,
-        } => handle_init_project(root_dir, build_dir),
+        } => handle_init_project(&root_dir, &build_dir),
         Commands::Build { build_dir } => handle_build_project(build_dir),
         Commands::Run {
             build_dir,
@@ -145,7 +146,9 @@ fn handle_new_project(
     create_directories(&name, &src_dir, &include_dir, &build_dir, &exec_dir)?;
     create_project_files(&name, &src_dir, &include_dir, &exec_dir, &file_ext)?;
     initialize_version_control(&name)?;
-    handle_init_project(name, build_dir)?;
+    handle_init_project(&name, &build_dir)?;
+
+    println!("{}", format!("Created new project '{}'", name).green());
 
     Ok(())
 }
@@ -266,10 +269,15 @@ fn initialize_version_control(name: &str) -> Result<()> {
     Ok(())
 }
 
-fn handle_init_project(root_dir: String, build_dir: String) -> Result<()> {
+fn handle_init_project(root_dir: &str, build_dir: &str) -> Result<()> {
     let command = format!("cmake -S ./{}/ -B ./{}/{}/", root_dir, root_dir, build_dir);
 
     run_command(&command).context("Failed to initialize project")?;
+
+    println!(
+        "{}",
+        format!("Initialized project in '{}'", build_dir).green()
+    );
 
     Ok(())
 }
@@ -278,6 +286,8 @@ fn handle_build_project(build_dir: String) -> Result<()> {
     let command = format!("cmake --build ./{}/", build_dir);
 
     run_command(&command).context("Failed to run build command")?;
+
+    println!("{}", "Build successful".green());
 
     Ok(())
 }
@@ -323,9 +333,17 @@ fn run_command(command: &str) -> Result<()> {
         .context("Failed to wait on command")?;
 
     if output.status.success() {
-        println!("{}", String::from_utf8_lossy(&output.stdout));
+        println!(
+            "{}:\n{}",
+            "Success".green(),
+            String::from_utf8_lossy(&output.stdout)
+        );
     } else {
-        println!("{}", String::from_utf8_lossy(&output.stderr));
+        println!(
+            "{}:\n{}",
+            "Error".red(),
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     Ok(())

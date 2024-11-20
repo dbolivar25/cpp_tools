@@ -1,36 +1,120 @@
-# Cpp Tools
+# C++ Tools
+
+A minimal CLI tool for managing C/C++ projects, inspired by Cargo's project management workflow. Built primarily for personal use in university coursework - feel free to use it if you find it helpful.
 
 ## Overview
 
-This CLI tool is designed to facilitate the creation, initialization, building,
-and running of C++ projects. It leverages the clap crate in Rust for command
-line argument parsing, providing a user-friendly interface for managing various
-aspects of a C++ project.
+This tool provides basic project management commands for C/C++ projects, handling project creation, building, and execution through a simple CLI interface. It uses CMake under the hood for build management.
 
 ## Features
 
-- Project Creation (new Command): Easily create a new C++ project with
-  customizable directory structures for source, include, build, and executable
-  files.
-- Project Initialization (init Command): Initialize the project's build system
-  and other necessary configurations.
-- Project Building (build Command): Compile the project into an executable.
-- Project Execution (run Command): Run the compiled project executable with
-  optional arguments.
+- Create new C/C++ projects with a standardized directory structure
+- Initialize CMake build configuration
+- Build projects with standard compiler flags
+- Run executables with argument support
+- Format source code using clang-format
+- Git initialization for new projects
+
+## Prerequisites
+
+- Rust toolchain (for installation)
+- CMake (3.24 or later)
+- C/C++ compiler (supports C17/C++23)
+- Git
+- clang-format (for code formatting)
 
 ## Installation
 
 ```bash
 git clone https://github.com/dbolivar25/cpp_tools.git
 cd cpp_tools
-
 cargo install --path .
 ```
 
-- Ensure the cargo bin directory is a `$PATH` directory
+Make sure your Cargo bin directory is in your system's PATH.
 
 ## Usage
 
+### Create a New Project
+
 ```bash
-cxx
+cxx new <PROJECT_NAME> [OPTIONS]
 ```
+
+Options:
+
+- `-f, --file-ext <EXT>`: File extension (c/cpp) [default: cpp]
+- `-s, --src-dir <DIR>`: Source directory [default: src]
+- `-i, --include-dir <DIR>`: Include directory [default: include]
+- `-b, --build-dir <DIR>`: Build directory [default: build]
+- `-e, --exec-dir <DIR>`: Executable directory [default: bin]
+
+### Initialize Project
+
+```bash
+cxx init [OPTIONS]
+```
+
+Options:
+
+- `-r, --root-dir <DIR>`: Root directory [default: .]
+- `-b, --build-dir <DIR>`: Build directory [default: build]
+
+### Build Project
+
+```bash
+cxx build [OPTIONS]
+```
+
+Options:
+
+- `-b, --build-dir <DIR>`: Build directory [default: build]
+
+### Run Project
+
+```bash
+cxx run [OPTIONS] [-- ARGS]
+```
+
+Options:
+
+- `-b, --build-dir <DIR>`: Build directory [default: build]
+- `-r, --runtime-dir <DIR>`: Executable directory [default: bin]
+- `-e, --exec-name <NAME>`: Executable name [default: project_name]
+- Arguments after `--` are passed to the executable
+
+### Format Code
+
+```bash
+cxx format [OPTIONS]
+```
+
+Options:
+
+- `-s, --src-dir <DIR>`: Source directory [default: src]
+
+## Project Structure
+
+```
+project_name/
+├── src/
+│   └── main.cpp
+├── include/
+├── build/
+├── bin/
+├── .gitignore
+└── CMakeLists.txt
+```
+
+## Build Configuration
+
+The tool sets up projects with the following defaults:
+
+- C++23/C17 standard
+- Warning flags: -Wall -Werror -Wextra -pedantic -pedantic-errors
+- Debug symbols enabled (-g)
+- CMake compile commands export enabled
+
+## License
+
+See LICENSE file for details.

@@ -248,8 +248,8 @@ add_executable({name} ${{SOURCE_FILES}})
             "{}
 
 int main() {{
-    {}
-    return 0;
+  {}
+  return 0;
 }}
 ",
             match file_ext {

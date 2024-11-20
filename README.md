@@ -32,5 +32,5 @@ cargo build --release
 ## Usage
 
 ```bash
-cpp_tools
+cxx
 ```

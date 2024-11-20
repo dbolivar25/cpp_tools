@@ -155,7 +155,7 @@ fn handle_new_project(
     handle_init_project(&name, &build_dir)?;
     initialize_version_control(&name)?;
 
-    println!("{}", format!("Created new project '{}'", name).green());
+    eprintln!("{}", format!("Created new project '{}'", name).green());
 
     Ok(())
 }
@@ -283,7 +283,7 @@ fn handle_init_project(root_dir: &str, build_dir: &str) -> Result<()> {
 
     run_command(&command).context("Failed to initialize project")?;
 
-    println!(
+    eprintln!(
         "{}",
         format!("Initialized project in '{}'", build_dir).green()
     );
@@ -296,7 +296,7 @@ fn handle_build_project(build_dir: String) -> Result<()> {
 
     run_command(&command).context("Failed to run build command")?;
 
-    println!("{}", "Build successful".green());
+    eprintln!("{}", "Build successful".green());
 
     Ok(())
 }

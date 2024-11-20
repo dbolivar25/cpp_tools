@@ -24,10 +24,10 @@ aspects of a C++ project.
 git clone https://github.com/dbolivar25/cpp_tools.git
 cd cpp_tools
 
-cargo build --release
+cargo install --path .
 ```
 
-- Copy/move executable to a `$PATH` directory
+- Ensure the cargo bin directory is a `$PATH` directory
 
 ## Usage
 

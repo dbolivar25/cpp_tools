@@ -333,7 +333,7 @@ fn handle_format_project(src_dir: String) -> Result<()> {
 }
 
 fn run_command(command: &str) -> Result<()> {
-    let output = Command::new("zsh")
+    let output = Command::new("bash")
         .arg("-c")
         .arg(command)
         .spawn()

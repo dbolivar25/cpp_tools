@@ -17,7 +17,6 @@ enum Commands {
     /// Creates a new C/C++ project
     New {
         /// Sets the name of the project
-        #[clap(short, long)]
         name: String,
 
         /// Sets the file extension for the project
@@ -245,7 +244,8 @@ add_executable({name} ${{SOURCE_FILES}})
     fs::write(
         format!("{}/{}/main.{}", name, src_dir, file_ext),
         format!(
-            "{}
+            "// Copyright (c) 2024 Author. All Rights Reserved.
+{}
 
 int main() {{
   {}
